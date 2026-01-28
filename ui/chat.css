@@ -1,0 +1,147 @@
+/* Full-page setup */
+body, html {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  color: white;
+  background-color: #2d3e50;
+}
+
+.input-group {
+  position: relative;
+  width: 300px;       /* define width for the container */
+}
+
+/* Wrapper to push input to bottom */
+.chat-input-wrapper {
+  width: 100%;
+  padding: 10px;
+  position: fixed;     /* stick to viewport bottom */
+  bottom: 0;
+  left: 0;
+  display: flex;
+  justify-content: center; /* horizontally center the input group */
+  background-color: #2d3e50; /* optional: like ChatGPT's footer */
+ /* box-shadow: 0 -2px 5px rgba(0,0,0,0.1); /* subtle shadow */
+  /*margin-bottom: 3%;*/
+ 
+}
+
+/* Input group container */
+.input-group {
+  position: relative;
+  width: 50%;       /* adjust as needed or use max-width */
+}
+
+/* Input styling */
+.input-group__input {
+  width: 100%;
+  padding: 10px 100px 10px 15px; /* right padding for button */
+  height: 45px;
+  box-sizing: border-box;
+  border-radius: 25px; /* rounded like ChatGPT */
+  border: 1px solid #3f3f3f;
+  color: #f9fafb;   
+  font-size: large;
+  font-weight: 900;
+  background-color: #2f2f2f;
+}
+
+.input-group__input:focus {
+  outline: 2px solid white; /* your color here */
+  outline-offset: 2px;        /* optional: adds space between border and input */
+}
+
+/* Button styling */
+.input-group__button {
+  position: absolute;
+  right: 5px;
+  top: 50%;
+  transform: translateY(-50%);
+  height: 35px;
+  padding: 0 20px;
+  border: none;
+  border-radius: 20px;
+  background-color: rgb(87, 84, 84);
+  color: white;
+  cursor: pointer;
+  font-weight: bold;
+  transition: background-color 0.15s ease-in-out;
+}
+
+.input-group__button:hover {
+   background-color: white;
+   color: black;
+}
+
+.input-group__button:active {
+    background-color: rgb(148, 146, 146)
+}
+
+.agent-output-wrapper {
+    margin-left: 50%;
+    margin-top: 5%;
+    transform: translateX(-50%);
+}
+
+.output-group__title {
+    text-align: center;
+}
+
+/* Agent Configuration & Logout Styling */
+
+.navbar {
+  width: 100%;
+  background-color: #2a2a2a;
+  padding: 12px 24px;
+  box-sizing: border-box;
+  position: fixed; /* keeps it in view while scrolling */
+  top: 0;           /* distance from the top */
+  z-index: 1000;    /* above most content */
+}
+
+
+
+.navbar__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+
+}
+
+.navbar__item {
+  float: right;
+  margin-left: 20px;
+  color: #ffffff;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.navbar__item--logout, .navbar__item--llm {
+    margin-top: .5%;
+}
+
+.navbar__item--logout:hover {
+  opacity: 0.85;
+}
+
+.navbar__select {
+  background-color: #2a2a2a;
+  color: #ffffff;
+  border: 1px solid #444;
+  padding: 6px 10px;
+  border-radius: 6px;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.navbar__select:focus {
+  outline: none;
+  box-shadow: none;
+  border-color: #444; /* keep it consistent */
+}
+
+
+
