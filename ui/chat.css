@@ -143,5 +143,6 @@ body, html {
   border-color: #444; /* keep it consistent */
 }
 
-
-
+.user-message {
+  color: red;
+}
