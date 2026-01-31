@@ -1,15 +1,16 @@
 const ws = new WebSocket("ws://127.0.0.1:8000/ws");
+const outputElement = document.querySelector(".output-group__answer");
 
 ws.onopen = () => {
     console.log("Connected to WebSocket");
 };
 
 ws.onmessage = (event) => {
-    const messages = document.getElementById("messages");
-    const li = document.createElement("li");
-    li.textContent = event.data;
-    messages.appendChild(li);
+    const line = document.createElement("p");
+    line.textContent = event.data;
+    outputElement.appendChild(line);
 };
+
 function sendMessage() {
   const input = document.getElementById("messageInput");
   if (!input.value.trim()) return;
