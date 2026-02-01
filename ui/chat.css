@@ -84,6 +84,7 @@ body, html {
     margin-left: 50%;
     margin-top: 5%;
     transform: translateX(-50%);
+    height: 80%;
 }
 
 .output-group__title {
@@ -101,8 +102,6 @@ body, html {
   top: 0;           /* distance from the top */
   z-index: 1000;    /* above most content */
 }
-
-
 
 .navbar__list {
   list-style: none;
@@ -144,5 +143,27 @@ body, html {
 }
 
 .user-message {
-  color: red;
+  color: lightgreen;
 }
+
+  .chatContainer {
+    position: fixed;
+    display: none;
+    bottom: 0;
+    right: 0;
+    width: 300px;
+    height: 410px;
+    background-color: #2d3e50;
+    border: 1px solid black;
+    border-radius: 10px;
+    margin-bottom: 0.2px;
+  }
+
+  .chatHeader {
+    background-color: #2f2f2f;
+    color: white;
+    padding: 10px;
+    border-radius: 10px 10px 0 0;
+    display: flex;
+    align-items: center;
+  }
