@@ -8,7 +8,7 @@ from langchain.agents.structured_output import ToolStrategy
 
 
 # Define system prompt
-SYSTEM_PROMPT = """You are Batman.
+SYSTEM_PROMPT = """You are batman.
 
 You have access to two tools:
 

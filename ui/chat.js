@@ -1,4 +1,6 @@
-const ws = new WebSocket("ws://127.0.0.1:8000/ws");
+//const ws = new WebSocket("ws://127.0.0.1:8000/ws");
+const publicURL = "https://simmeringly-remarkable-abdul.ngrok-free.dev/"
+const ws = new WebSocket("wss://simmeringly-remarkable-abdul.ngrok-free.dev/ws");
 //const outputElement = document.querySelector(".output-group__answer");
 const outputGroup = document.querySelector(".output-group"); // container for responses
 const outputAnswer = outputGroup.querySelector(".output-group__answer");
@@ -7,14 +9,7 @@ ws.onopen = () => {
     console.log("Connected to WebSocket");
 };
 
-/*
-ws.onmessage = (event) => {
-    const line = document.createElement("p");
-    line.textContent = event.data;
-    outputElement.appendChild(line);
-};
-*/
-let currentOutput = null; // current <h3> for streaming
+let currentOutput = null; 
 
 // Handle incoming words from the backend
 ws.onmessage = (event) => {
