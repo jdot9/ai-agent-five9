@@ -10,7 +10,9 @@ class MyNavbar extends HTMLElement {
             display: flex;
             align-items: center;             /* vertically center logo + text */
             justify-content: space-between;  /* brand left, links right       */
-            padding: 12px 20px;
+            position: fixed;
+            background-color: white;
+            width: 100%;
         }
 
         ul {
