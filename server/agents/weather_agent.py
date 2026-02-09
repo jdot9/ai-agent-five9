@@ -38,7 +38,7 @@ def get_user_location(runtime: ToolRuntime[Context]) -> str:
 # Configure model
 model = init_chat_model(
     "claude-sonnet-4-5-20250929",
-    temperature=0
+    temperature=1.0
 )
 
 # Define response schema for the agent.

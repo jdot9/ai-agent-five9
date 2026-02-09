@@ -10,13 +10,19 @@ app = FastAPI()
 # Get project root (parent of server)
 project_root = Path(__file__).parent.parent
 ui_path = project_root / "ui"
+components_path = project_root / "ui/components"
 app.mount("/static", StaticFiles(directory=ui_path), name="static")
-print("Serving HTML from:", ui_path / "chat.html")
+print("Serving HTML from:", components_path / "chat.html")
 
 # Serve your HTML page at root
 @app.get("/")
 def read_index():
-    return FileResponse(ui_path / "chat.html")
+    return FileResponse(ui_path / "index.html")
+
+# Serve your HTML page at chat
+@app.get("/chat")
+def read_index():
+    return FileResponse(components_path / "chat.html")
 
 
 @app.websocket("/ws")

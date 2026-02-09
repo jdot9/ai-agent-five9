@@ -1,6 +1,6 @@
-//const ws = new WebSocket("ws://127.0.0.1:8000/ws");
-const publicURL = "https://simmeringly-remarkable-abdul.ngrok-free.dev/"
-const ws = new WebSocket("wss://simmeringly-remarkable-abdul.ngrok-free.dev/ws");
+const ws = new WebSocket("ws://127.0.0.1:8000/ws");
+//const publicURL = "https://simmeringly-remarkable-abdul.ngrok-free.dev/"
+//const ws = new WebSocket("wss://simmeringly-remarkable-abdul.ngrok-free.dev/ws");
 //const outputElement = document.querySelector(".output-group__answer");
 const outputGroup = document.querySelector(".output-group"); // container for responses
 const outputAnswer = outputGroup.querySelector(".output-group__answer");
