@@ -6,6 +6,7 @@
     <title>Document</title>
     <link rel="stylesheet" href="static/css/base.css">
     <script src="static/js/components/navbar.js" defer></script>
+    <script src="static/js/components/button.js" defer></script>
 </head>
 <body>
     <my-navbar brand="Home">
@@ -20,13 +21,13 @@
         <a href="#company">Company</a>
         <a href="#resources">Resources</a>
         <a href="#careers">Careers</a>
-        <a href="#careers">Support</a>
+        <a href="#support">Support</a>
     </my-navbar>
 
   <section class="hero">
     <h1>Build Smarter Drones</h1>
     <p>Next-generation drone technology for engineers and innovators.</p>
-    <button class="btn">Get Started</button>
+    <my-button variant="primary">Get Started</my-button>
   </section>
 
   <section class="features" id="features">
@@ -50,13 +51,13 @@
     <h2>Join the Future of Drone Engineering</h2>
     <br>
     <input type="email" placeholder="Enter your email">
-    <button>Sign Up</button>
+    <my-button variant="secondary">Sign Up</my-button>
   </section>
 
   <footer class="footer">
     <p>© 2026 Company Name LLC. All rights reserved.</p>
     <a href="https://www.jasondotson.dev" class="footerLink" target="_blank" rel="noopener noreferrer">jasondotson.dev</a>
   </footer>
-  
+
 </body>
 </html>

@@ -7,7 +7,7 @@ body {
     .hero {
       height: 90vh;
       background: linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)),
-                  url('/static/assets/landing-page2.png');
+                  url('/static/assets/landing-page.png');
 
       background-size: cover;
       background-position: center;
@@ -29,24 +29,6 @@ body {
     .hero p {
       font-size: 1.2rem;
       margin-bottom: 30px;
-    }
-
-    .btn {
-      padding: 12px 25px;
-      background-color: #0693e3;
-      color: white;
-      border: none;
-      text-decoration: none;
-      border-radius: 5px;
-      transition: background-color 0.3s ease;
-    }
-
-    .btn:hover {
-        background-color: #22a4ef;
-    }
-
-    .btn:active {
-        background-color: #8ed1fc;
     }
 
     /* FEATURES */
@@ -78,13 +60,7 @@ body {
       margin-right: 10px;
     }
 
-    .cta button {
-      padding: 10px 20px;
-      background: #111;
-      color: white;
-      border: none;
-      cursor: pointer;
-    }
+
 
     /* FOOTER */
 .footer {
