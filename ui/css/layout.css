@@ -1,0 +1,68 @@
+    /* Hero Section */
+    .hero {
+      height: 90vh;
+      background: linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)),
+                  url('/static/assets/landing-page.png');
+
+      background-size: cover;
+      background-position: center;
+      color: white;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      text-align: center;
+      padding: 20px;
+      padding-left: 10%;
+      padding-top: 8%;
+    }
+
+    .hero h1 {
+      font-size: 3rem;
+      margin-bottom: 20px;
+    }
+
+    .hero p {
+      font-size: 1.2rem;
+      margin-bottom: 30px;
+    }
+
+    /* Features Section */
+    .features {
+      padding: 60px 10%;
+      display: flex;
+      justify-content: space-between;
+      text-align: center;
+    }
+
+    .feature {
+      width: 30%;
+    }
+
+    .feature h3 {
+      margin-bottom: 15px;
+    }
+
+      /* RESPONSIVE */
+    @media(max-width: 768px) {
+      .features {
+        flex-direction: column;
+      }
+
+      .feature {
+        width: 100%;
+        margin-bottom: 30px;
+      }
+    }
+
+    /* Call To Action */
+    .cta {
+      background: #f4f4f4;
+      padding: 60px 10%;
+      text-align: center;
+    }
+
+    .cta input {
+      padding: 10px;
+      width: 250px;
+      margin-right: 10px;
+    }

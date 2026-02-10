@@ -5,9 +5,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Document</title>
     <link rel="stylesheet" href="static/css/base.css">
+    <link rel="stylesheet" href="static/css/layout.css">
     <script src="static/js/components/navbar.js" defer></script>
     <script src="static/js/components/button.js" defer></script>
+    <script src="static/js/components/footer.js" defer></script>
 </head>
+
 <body>
     <my-navbar brand="Home">
         <img slot="logo" 
@@ -54,10 +57,7 @@
     <my-button variant="secondary">Sign Up</my-button>
   </section>
 
-  <footer class="footer">
-    <p>© 2026 Company Name LLC. All rights reserved.</p>
-    <a href="https://www.jasondotson.dev" class="footerLink" target="_blank" rel="noopener noreferrer">jasondotson.dev</a>
-  </footer>
+  <my-footer/>
 
 </body>
 </html>

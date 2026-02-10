@@ -15,29 +15,29 @@ class MyButton extends HTMLElement {
                 }
 
                 :host([variant="primary"]) button {
-                    background-color: #0693e3;
+                    background-color: var(--primary-color);
                     color: white;
                 }
 
                 :host([variant="primary"]) button:hover {
-                    background-color: #22a4ef;
+                    background-color: var(--primary-color-hover);
                 }
 
                 :host([variant="primary"]) button:active {
-                    background-color: #8ed1fc;
+                    background-color: var(--primary-color-active);
                 }
 
                 :host([variant="secondary"]) button {
-                    background-color: black;
+                    background-color: var(--secondary-color);
                     color: white;
                 }
 
                 :host([variant="secondary"]) button:hover {
-                    background-color: #3f3e3e;
+                    background-color: var(--secondary-color-hover);
                 }
 
                 :host([variant="secondary"]) button:active {
-                    background-color: rgb(116, 118, 119);
+                    background-color: var(--secondary-color-active);
                 }
                     
             </style>
