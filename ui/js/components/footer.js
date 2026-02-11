@@ -42,7 +42,7 @@ class MyFooter extends HTMLElement {
                 }
 
             </style>
-
+            
             <footer class="footer">
                 <p>© 2026 Company Name LLC. All rights reserved.</p>
                 <a href="https://www.jasondotson.dev" 

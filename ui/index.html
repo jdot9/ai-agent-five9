@@ -9,6 +9,7 @@
     <script src="static/js/components/navbar.js" defer></script>
     <script src="static/js/components/button.js" defer></script>
     <script src="static/js/components/footer.js" defer></script>
+    <script src="static/js/components/chatroom.js" defer></script>
 </head>
 
 <body>
@@ -50,14 +51,15 @@
     </div>
   </section>
 
-  <section class="cta" id="contact">
+  <section style="position: relative;" class="cta" id="contact">
     <h2>Join the Future of Drone Engineering</h2>
     <br>
     <input type="email" placeholder="Enter your email">
     <my-button variant="secondary">Sign Up</my-button>
+    <my-chatroom></my-chatroom>
   </section>
-
-  <my-footer/>
+  
+  <my-footer></my-footer>
 
 </body>
 </html>
