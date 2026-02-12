@@ -72,18 +72,12 @@ class MyChatRoom extends HTMLElement {
                     margin-top: 6%;
                 }
 
-                .chatroom-body {
-                
-                }
+             
 
                 .chatroom-body__system-message {
                     color: var(--primary-color);
                     font-weight: 900;
-                }
-
-                .chat-room-body__conversation {
-                      display: flex;
-                      flex-direction: column;
+                    padding: 3px;
                 }
 
                 .chatroom-form {
@@ -107,6 +101,18 @@ class MyChatRoom extends HTMLElement {
                 .chatroom-form__input:focus {
                     outline: 2px solid var(--primary-color); 
                 }
+                
+                .chatroom-body__conversation {
+                    display: flex;
+                    flex-direction: column;
+                    align-items: flex-start;
+                    height: 184px;
+                    overflow-y: auto;
+                    overflow-x: hidden;
+                    width: 100%;
+                    box-sizing: border-box;
+                }
+
 
             </style>
 
@@ -122,13 +128,37 @@ class MyChatRoom extends HTMLElement {
 
                 <div class="chatroom-body">
                 
-                    <div class="chatroom-body__system-message"> 
-                        <p>AI Agent session paused.</p> 
-                        <p> Connecting with human...  </p>
+                    <div class="chatroom-body__system-message">
+                        Connecting with human...
                     </div>
 
                     <div class="chatroom-body__conversation">
                         
+                            <my-message sent="true"> 
+                                The Walking Dead is better than the Last of Us.
+                                <span slot="timestamp">3:00pm</span>
+                            </my-message>
+
+                            <my-message received="true">
+                                You've lost your mind.
+                                <span slot="timestamp">3:05pm</span>
+                            </my-message>   
+
+                            <my-message received="true">
+                                Blah blah blah blah
+                                <span slot="timestamp">3:08pm</span>
+                            </my-message>
+
+                             <my-message sent="true"> 
+                                Now, bend the knee.
+                                <span slot="timestamp">10:00pm</span>
+                             </my-message>
+
+                            <my-message sent="true"> 
+                                Testing testing testing testing
+                                <span slot="timestamp">11:00pm</span>
+                             </my-message>
+                     
                     </div>
                    
                 </div>
