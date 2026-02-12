@@ -1,7 +1,7 @@
 /*
     -header contains a title, LLM Dropdown menu, and 3 buttons: 
                 "clear messages", "end conversation", "hide chat".
-    "end conversation" is hidden when ai agent is active.
+    "End Conversation" is hidden when ai agent is active.
     "LLM Dropdown menu" is hidden when ai agent is inactive.
 
     -body contains system messages & conversations
@@ -20,7 +20,7 @@ class MyChatRoom extends HTMLElement {
                     position: fixed;
                     right: 0;
                     bottom: 45px;
-                    width: 280px;
+                    width: 320px;
                     height: 300px;
                     background-color: white;
                     border: 2px solid black;
@@ -38,8 +38,12 @@ class MyChatRoom extends HTMLElement {
                 .chatroom-header__title {
                     margin-left: 10px;
                 }
-                
 
+                .chatroom-header__llm {
+                    margin-left: 11%;
+                    visibility: visible;
+                }
+                
                 .chatroom-header__clear {
                     position: absolute;
                     right: 20px;
@@ -98,7 +102,6 @@ class MyChatRoom extends HTMLElement {
                     height: 35px;
                     width: 95%;
                     padding: 3%;
-                 
                 }
 
                 .chatroom-form__input:focus {
@@ -110,12 +113,9 @@ class MyChatRoom extends HTMLElement {
             <div class="chatroom">
                 <div class="chatroom-header">
                     <p class="chatroom-header__title"> AI Agent </p>
-
-                    <select class="chatroom-header__dropdown">
-                        <option> Claude (Anthropic) </option>
-                        <option> GPT-5 (OpenAI) </option>
-                    </select>
-
+                    <p class="chatroom-header__llm"> LLM: </p>
+                    <my-button end-conversation="true" onClick="alert('Disconnected')">End Conversation</my-button>
+                    <my-dropdown></my-dropdown>
                     <p class="chatroom-header__clear" title="Clear Conversation"> 🗑️ </p>
                     <p class="chatroom-header__exit"> X </p>
                 </div>
