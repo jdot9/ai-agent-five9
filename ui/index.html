@@ -12,6 +12,7 @@
     <script src="static/js/components/chatroom.js" defer></script>
     <script src="static/js/components/dropdown.js" defer></script>
     <script src="static/js/components/message.js" defer></script>
+    <script src="static/js/components/spinner.js" defer></script>
    
 </head>
 
@@ -39,7 +40,7 @@
 
   <section class="features" id="features">
     <div class="feature">
-      <h3>High Performance</h3>
+      <h3 onmouseover="this.style.boxShadow='0 4px 16px rgba(0, 0, 255, 0.4)';">High Performance</h3>
       <p>Optimized systems for maximum efficiency and speed.</p>
     </div>
 
@@ -59,10 +60,12 @@
     <br>
     <input type="email" placeholder="Enter your email">
     <my-button variant="secondary">Sign Up</my-button>
+  
     <my-chatroom></my-chatroom>
   </section>
   
   <my-footer></my-footer>
-
+ 
 </body>
+
 </html>

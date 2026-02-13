@@ -15,13 +15,17 @@ class MyChatRoom extends HTMLElement {
 
         shadow.innerHTML = `
             <style>
+                .hidden {
+                    display: none;
+                }
+
                 .chatroom {
                     position: absolute;
                     position: fixed;
                     right: 0;
                     bottom: 45px;
                     width: 320px;
-                    height: 300px;
+                    height: 400px;
                     background-color: white;
                     border: 2px solid black;
                     border-radius: 4%;
@@ -72,12 +76,11 @@ class MyChatRoom extends HTMLElement {
                     margin-top: 6%;
                 }
 
-             
-
                 .chatroom-body__system-message {
-                    color: var(--primary-color);
+                    color: white;
                     font-weight: 900;
                     padding: 3px;
+                    background-color: black;
                 }
 
                 .chatroom-form {
@@ -106,34 +109,55 @@ class MyChatRoom extends HTMLElement {
                     display: flex;
                     flex-direction: column;
                     align-items: flex-start;
-                    height: 184px;
+                    height: 271px;
                     overflow-y: auto;
                     overflow-x: hidden;
                     width: 100%;
                     box-sizing: border-box;
                 }
 
+            img {
+                cursor: pointer; 
+                border-radius: 50%; 
+                width: 100px; 
+                height: 100px; 
+                position: absolute; 
+                position: fixed; 
+                right: 0; 
+                bottom: 47px; 
+                margin-right: 1%;
+            }
+
+            img:hover {
+                transform: scale(1.2);
+            }
+
 
             </style>
+            
+            <img src="static/assets/chatbot-icon.png" 
+                 id="showChatBtn" 
+                 alt="Toggle chat"
+            >
 
-            <div class="chatroom">
+            <div class="chatroom hidden">
                 <div class="chatroom-header">
                     <p class="chatroom-header__title"> AI Agent </p>
                     <p class="chatroom-header__llm"> LLM: </p>
                     <my-button end-conversation="true" onClick="alert('Disconnected')">End Conversation</my-button>
                     <my-dropdown></my-dropdown>
                     <p class="chatroom-header__clear" title="Clear Conversation"> 🗑️ </p>
-                    <p class="chatroom-header__exit"> X </p>
+                    <p id="hideChatBtn" class="chatroom-header__exit"> X </p>
                 </div>
 
                 <div class="chatroom-body">
                 
                     <div class="chatroom-body__system-message">
-                        Connecting with human...
+                        Connecting with human... 
                     </div>
 
                     <div class="chatroom-body__conversation">
-                        
+                            
                             <my-message sent="true"> 
                                 The Walking Dead is better than the Last of Us.
                                 <span slot="timestamp">3:00pm</span>
@@ -175,7 +199,19 @@ class MyChatRoom extends HTMLElement {
                 
             </div>
 
-        `
+        `;
+
+        const showChatBtn = shadow.getElementById("showChatBtn");
+        const hideChatBtn = shadow.getElementById("hideChatBtn");
+        const chatroom = shadow.querySelector(".chatroom");
+        if (showChatBtn && chatroom || hideChatBtn && chatroom) {
+            showChatBtn.addEventListener("click", () => {
+                chatroom.classList.toggle("hidden");
+            });
+            hideChatBtn.addEventListener("click", () => {
+                chatroom.classList.toggle("hidden");
+            });
+        }
     }
 }
 

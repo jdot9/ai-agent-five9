@@ -18,6 +18,7 @@ class MyDropdown extends HTMLElement {
                     background: white;
                     border: 1px solid #ccc;
                     min-width: 130px;
+                    z-index: 1;
                 }
 
                 .dropdown-content a {
