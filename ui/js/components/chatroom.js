@@ -11,6 +11,7 @@
 
 class MyChatRoom extends HTMLElement {
     connectedCallback() {
+    
         const shadow = this.attachShadow({mode: 'open'});
 
         shadow.innerHTML = `
@@ -116,21 +117,21 @@ class MyChatRoom extends HTMLElement {
                     box-sizing: border-box;
                 }
 
-            img {
-                cursor: pointer; 
-                border-radius: 50%; 
-                width: 100px; 
-                height: 100px; 
-                position: absolute; 
-                position: fixed; 
-                right: 0; 
-                bottom: 47px; 
-                margin-right: 1%;
-            }
+                img {
+                    cursor: pointer; 
+                    border-radius: 50%; 
+                    width: 100px; 
+                    height: 100px; 
+                    position: absolute; 
+                    position: fixed; 
+                    right: 0; 
+                    bottom: 47px; 
+                    margin-right: 1%;
+                }
 
-            img:hover {
-                transform: scale(1.2);
-            }
+                img:hover {
+                    transform: scale(1.2);
+                }
 
 
             </style>
@@ -146,7 +147,7 @@ class MyChatRoom extends HTMLElement {
                     <p class="chatroom-header__llm"> LLM: </p>
                     <my-button end-conversation="true" onClick="alert('Disconnected')">End Conversation</my-button>
                     <my-dropdown></my-dropdown>
-                    <p class="chatroom-header__clear" title="Clear Conversation"> 🗑️ </p>
+                    <p id="clear-convo" class="chatroom-header__clear" title="Clear Conversation"> 🗑️ </p>
                     <p id="hideChatBtn" class="chatroom-header__exit"> X </p>
                 </div>
 
@@ -158,36 +159,12 @@ class MyChatRoom extends HTMLElement {
 
                     <div class="chatroom-body__conversation">
                             
-                            <my-message sent="true"> 
-                                The Walking Dead is better than the Last of Us.
-                                <span slot="timestamp">3:00pm</span>
-                            </my-message>
-
-                            <my-message received="true">
-                                You've lost your mind.
-                                <span slot="timestamp">3:05pm</span>
-                            </my-message>   
-
-                            <my-message received="true">
-                                Blah blah blah blah
-                                <span slot="timestamp">3:08pm</span>
-                            </my-message>
-
-                             <my-message sent="true"> 
-                                Now, bend the knee.
-                                <span slot="timestamp">10:00pm</span>
-                             </my-message>
-
-                            <my-message sent="true"> 
-                                Testing testing testing testing
-                                <span slot="timestamp">11:00pm</span>
-                             </my-message>
                      
                     </div>
                    
                 </div>
 
-                <form class="chatroom-form" onsubmit="">
+                <form class="chatroom-form" onsubmit="sendMessage(event)">
                     <input
                         class="chatroom-form__input"
                         id="messageInput"
@@ -201,6 +178,77 @@ class MyChatRoom extends HTMLElement {
 
         `;
 
+        const messageContainer = shadow.querySelector(".chatroom-body__conversation");
+        const ws = new WebSocket("ws://127.0.0.1:8000/ws");
+
+        ws.onopen = () => {
+            console.log("Connected to WebSocket");
+            console.log(messageContainer);
+        };
+
+        // Handle incoming words from the backend
+        ws.onmessage = (event) => {
+            const response = event.data;
+            console.log(response);
+
+            const serverMessage = document.createElement("my-message");
+            serverMessage.textContent = response;
+            serverMessage.setAttribute("received","true");
+
+            //[] = use my system default locale
+            const time = new Date().toLocaleTimeString([], {
+                hour: "numeric",
+                minute: "2-digit"
+            });
+            
+            const timestamp = document.createElement("span");
+            timestamp.setAttribute("slot", "timestamp");
+            timestamp.textContent = time;
+
+            messageContainer.appendChild(serverMessage);
+            serverMessage.appendChild(timestamp);
+        }
+
+      // Called when form is submitted
+      window.sendMessage = function (event) {
+            event.preventDefault();
+            const input = shadow.getElementById("messageInput");
+            const message = input.value.trim();
+            if (!message) return;
+
+            input.value = ""; // clear input
+
+            // Render user's message first as a paragraph
+            const userMsg = document.createElement("my-message");
+            userMsg.setAttribute("sent", "true");
+            userMsg.textContent = message;
+
+            //[] = use my system default locale
+            const time = new Date().toLocaleTimeString([], {
+                hour: "numeric",
+                minute: "2-digit"
+            });
+
+            const timestamp = document.createElement("span");
+            timestamp.setAttribute("slot", "timestamp");
+            timestamp.textContent = time;
+
+            messageContainer.appendChild(userMsg);
+            userMsg.appendChild(timestamp);
+
+            // Scroll user message into view
+            userMsg.scrollIntoView({ behavior: "smooth" });
+
+            // Send user's message to the WebSocket
+            ws.send(message);
+
+            console.log(`Message sent: ${message}`);
+        }
+
+        // Clear conversation history
+        
+
+        // Hide or show chat
         const showChatBtn = shadow.getElementById("showChatBtn");
         const hideChatBtn = shadow.getElementById("hideChatBtn");
         const chatroom = shadow.querySelector(".chatroom");

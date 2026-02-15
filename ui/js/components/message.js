@@ -20,18 +20,19 @@ class MyMessage extends HTMLElement {
                 :host([received="true"]) {
                     align-self: flex-start;
                 }
-                
+
                 .message {
-                    width: 200px;
-                    max-width: calc(100% - 20px);
-                    min-height: fit-content;
-                    margin: 10px;
-                    padding: 5px;
+                    display: inline-block;           /* allows width to shrink to fit text */
+                    width: fit-content;              /* shrink to text length */
+                    max-width: calc(100% - 20px);    /* prevent overflow */
+                    min-width: 50px;                 /* optional: tiny bubbles stay readable */
+                    padding: 5px 10px;
                     border-radius: 18px;
                     color: white;
                     font-weight: 900;
                     word-wrap: break-word;
                     overflow-wrap: break-word;
+                    margin: 10px;
                 }
                 
                 .message--sent {

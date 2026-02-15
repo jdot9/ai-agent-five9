@@ -33,18 +33,10 @@ async def websocket_endpoint(websocket: WebSocket):
             # Receive user message
             user_message = await websocket.receive_text()
             print("User:", user_message)
-
-            # Run your agent
-            agent_response = run_agent(user_message, user_id="1", thread_id="1")
-            response_text = agent_response.punny_response
-
-           # Split into words and send one at a time
-            words = response_text.split()
-            for word in words:
-                await websocket.send_text(word + " ")  # append space after each word
-                await asyncio.sleep(0.05)  # adjust speed as needed
-
-            await websocket.send_text("<END>")  # mark end of message
+            await asyncio.sleep(1)
+            
+            # Send response to client
+            await websocket.send_text("Server message")  
     except WebSocketDisconnect:
         print("Client disconnected")
 
