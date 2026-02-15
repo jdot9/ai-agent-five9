@@ -9,12 +9,22 @@
 
 */
 
+import { createTimestamp } from "../utils/createTimestamp.js";
+import { createMessage } from "../utils/createMessage.js";
 class MyChatRoom extends HTMLElement {
-    connectedCallback() {
-    
-        const shadow = this.attachShadow({mode: 'open'});
 
-        shadow.innerHTML = `
+         constructor() {
+            super();
+            this.attachShadow({mode: 'open'})
+        }
+        
+        connectedCallback() {
+            this.render();
+            this.setupEvents();
+        }
+
+        render() {
+        this.shadowRoot.innerHTML = `
             <style>
                 .hidden {
                     display: none;
@@ -164,7 +174,7 @@ class MyChatRoom extends HTMLElement {
                    
                 </div>
 
-                <form class="chatroom-form" onsubmit="sendMessage(event)">
+                <form id="formId" class="chatroom-form">
                     <input
                         class="chatroom-form__input"
                         id="messageInput"
@@ -177,90 +187,63 @@ class MyChatRoom extends HTMLElement {
             </div>
 
         `;
+        }
 
-        const messageContainer = shadow.querySelector(".chatroom-body__conversation");
-        const ws = new WebSocket("ws://127.0.0.1:8000/ws");
+        setupEvents() {
 
-        ws.onopen = () => {
-            console.log("Connected to WebSocket");
-            console.log(messageContainer);
-        };
+            const shadow = this.shadowRoot;
+            const ws = new WebSocket("ws://127.0.0.1:8000/ws");
+            const messageContainer = shadow.querySelector(".chatroom-body__conversation");
+            const clearBtnId = shadow.getElementById("clear-convo");
+            const inputId = shadow.getElementById("messageInput");
+            const formId = shadow.getElementById("formId");
+            const showChatBtnId = shadow.getElementById("showChatBtn");
+            const hideChatBtnId = shadow.getElementById("hideChatBtn");
+            const chatroomClass = shadow.querySelector(".chatroom");
+            
+            // Log websocket connection
+            ws.onopen = () => {
+                console.log("Connected to WebSocket");
+            };
 
-        // Handle incoming words from the backend
-        ws.onmessage = (event) => {
-            const response = event.data;
-            console.log(response);
+            // Receive message from backend
+            ws.onmessage = (event) => {
+                const serverMessage = createMessage(event.data, "received");
+                messageContainer.appendChild(serverMessage);
+                serverMessage.appendChild(createTimestamp());
+            }
 
-            const serverMessage = document.createElement("my-message");
-            serverMessage.textContent = response;
-            serverMessage.setAttribute("received","true");
+            // Send message to backend
+            formId.addEventListener("submit", (event) => {
+                event.preventDefault();
 
-            //[] = use my system default locale
-            const time = new Date().toLocaleTimeString([], {
-                hour: "numeric",
-                minute: "2-digit"
+                const message = inputId.value.trim();
+                if (!message) return;
+
+                inputId.value = ""; // clear input
+                const userMsgBubble = createMessage(message, "sent")
+                messageContainer.appendChild(userMsgBubble);
+                userMsgBubble.appendChild(createTimestamp());
+
+                userMsgBubble.scrollIntoView({ behavior: "smooth" });
+                ws.send(message);
+                console.log(`Message sent: ${message}`);
+            });
+
+            // Clear conversation history
+            clearBtnId.addEventListener("click", () => {
+                messageContainer.replaceChildren();
+            });
+
+            // Show/hide chatroom  
+            showChatBtnId.addEventListener("click", () => {
+                chatroomClass.classList.toggle("hidden");
+            });
+            hideChatBtnId.addEventListener("click", () => {
+                chatroomClass.classList.toggle("hidden");
             });
             
-            const timestamp = document.createElement("span");
-            timestamp.setAttribute("slot", "timestamp");
-            timestamp.textContent = time;
-
-            messageContainer.appendChild(serverMessage);
-            serverMessage.appendChild(timestamp);
         }
-
-      // Called when form is submitted
-      window.sendMessage = function (event) {
-            event.preventDefault();
-            const input = shadow.getElementById("messageInput");
-            const message = input.value.trim();
-            if (!message) return;
-
-            input.value = ""; // clear input
-
-            // Render user's message first as a paragraph
-            const userMsg = document.createElement("my-message");
-            userMsg.setAttribute("sent", "true");
-            userMsg.textContent = message;
-
-            //[] = use my system default locale
-            const time = new Date().toLocaleTimeString([], {
-                hour: "numeric",
-                minute: "2-digit"
-            });
-
-            const timestamp = document.createElement("span");
-            timestamp.setAttribute("slot", "timestamp");
-            timestamp.textContent = time;
-
-            messageContainer.appendChild(userMsg);
-            userMsg.appendChild(timestamp);
-
-            // Scroll user message into view
-            userMsg.scrollIntoView({ behavior: "smooth" });
-
-            // Send user's message to the WebSocket
-            ws.send(message);
-
-            console.log(`Message sent: ${message}`);
-        }
-
-        // Clear conversation history
-        
-
-        // Hide or show chat
-        const showChatBtn = shadow.getElementById("showChatBtn");
-        const hideChatBtn = shadow.getElementById("hideChatBtn");
-        const chatroom = shadow.querySelector(".chatroom");
-        if (showChatBtn && chatroom || hideChatBtn && chatroom) {
-            showChatBtn.addEventListener("click", () => {
-                chatroom.classList.toggle("hidden");
-            });
-            hideChatBtn.addEventListener("click", () => {
-                chatroom.classList.toggle("hidden");
-            });
-        }
-    }
 }
 
 customElements.define('my-chatroom', MyChatRoom);

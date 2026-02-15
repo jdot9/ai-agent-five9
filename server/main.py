@@ -34,9 +34,9 @@ async def websocket_endpoint(websocket: WebSocket):
             user_message = await websocket.receive_text()
             print("User:", user_message)
             await asyncio.sleep(1)
-            
+            server_message = "This is a test message from the server"
             # Send response to client
-            await websocket.send_text("Server message")  
+            await websocket.send_text(server_message)  
     except WebSocketDisconnect:
         print("Client disconnected")
 
