@@ -5,6 +5,14 @@ from langchain_core.messages import SystemMessage, HumanMessage, AIMessage
 from langgraph.checkpoint.memory import InMemorySaver
 from langchain_openai import ChatOpenAI
 from langchain_anthropic import ChatAnthropic
+import logging
+
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s - %(levelname)s - %(name)s - %(message)s"
+)
+
+logger = logging.getLogger(__name__)
 
 #model = ChatOpenAI(model="gpt-4o", temperature=0) 
 model = ChatAnthropic(
@@ -40,6 +48,7 @@ class ChatState(TypedDict):
     summary: Optional[str]
 
 def classify_intent(state: ChatState):
+    logger.info("Asking LLM for intent label...")
     last_message = state["messages"][-1]["content"]
 
     # 1️⃣ Ask LLM for label
@@ -53,6 +62,7 @@ def classify_intent(state: ChatState):
 
 # Convert state message dictionaries to LangChain message objects.
 def _messages_from_state(state: ChatState) -> List:
+    logger.info("Converting state message dictionaries to LangChain message objects...")
     out = []
     for message in state["messages"]:
         role, content = message.get("role", "user"), message.get("content", "")
@@ -63,6 +73,7 @@ def _messages_from_state(state: ChatState) -> List:
     return out
 
 def general_chat(state: ChatState):
+    logger.info("General Chat Node")
     langchain_messages = _messages_from_state(state)
     response = model.invoke([system_prompts["general_chat"]] + langchain_messages)
     ai_content = response.content if hasattr(response, "content") else str(response)
@@ -81,7 +92,10 @@ def summarize_conversation(state: ChatState):
 
 # Define routers
 def classification_router(state: ChatState) -> str:
+  
+    logger.info("Routing intent to appropriate node...")
     intent = state.get("intent")
+    logger.info("Intent classified: " + intent)
   
     if intent == "get_human":
         return "get_five9_agent"

@@ -36,7 +36,7 @@ async def websocket_endpoint(websocket: WebSocket):
         while True:
             user_message = await websocket.receive_text()
             print("User:", user_message)
-
+        
             config = {"configurable": {"thread_id": thread_id}}
             result = await asyncio.to_thread(
                 graph.invoke,
@@ -46,13 +46,14 @@ async def websocket_endpoint(websocket: WebSocket):
             
             # Prefer explicit response; else last assistant message
             ai_text = result.get("response")
+            print("AI: " + ai_text)
             if not ai_text and result.get("messages"):
                 for message in reversed(result["messages"]):
                     if message.get("role") == "assistant":
                         ai_text = message.get("content", "")
                         break
             if not ai_text:
-                ai_text = "I didn't understand. Could you rephrase?"
+                ai_text = "I have failed to connect to an LLM."
 
             await websocket.send_text(ai_text)  
     except WebSocketDisconnect:
