@@ -192,6 +192,7 @@ class MyChatRoom extends HTMLElement {
         setupEvents() {
 
             const shadow = this.shadowRoot;
+            // const ws = new WebSocket("wss://simmeringly-remarkable-abdul.ngrok-free.dev/ws");
             const ws = new WebSocket("ws://127.0.0.1:8000/ws");
             const messageContainer = shadow.querySelector(".chatroom-body__conversation");
             const clearBtnId = shadow.getElementById("clear-convo");
@@ -211,6 +212,7 @@ class MyChatRoom extends HTMLElement {
                 const serverMessage = createMessage(event.data, "received");
                 messageContainer.appendChild(serverMessage);
                 serverMessage.appendChild(createTimestamp());
+                serverMessage.scrollIntoView({ behavior: "smooth" });
             }
 
             // Send message to backend
@@ -239,6 +241,7 @@ class MyChatRoom extends HTMLElement {
             showChatBtnId.addEventListener("click", () => {
                 chatroomClass.classList.toggle("hidden");
             });
+
             hideChatBtnId.addEventListener("click", () => {
                 chatroomClass.classList.toggle("hidden");
             });
