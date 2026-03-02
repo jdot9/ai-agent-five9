@@ -192,7 +192,7 @@ class MyChatRoom extends HTMLElement {
         setupEvents() {
 
             const shadow = this.shadowRoot;
-            // const ws = new WebSocket("wss://simmeringly-remarkable-abdul.ngrok-free.dev/ws");
+            // const ws = new WebSocket("wss://CALLBACK-URL/ws");
             const ws = new WebSocket("ws://127.0.0.1:8000/ws");
             const messageContainer = shadow.querySelector(".chatroom-body__conversation");
             const clearBtnId = shadow.getElementById("clear-convo");
