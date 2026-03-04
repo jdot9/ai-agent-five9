@@ -40,19 +40,24 @@ class MessagingService:
                 json=payload
             )
         print(response.json())
+        print(response.status_code)
         return response
     
     def start(self, contact: dict[str, str], tenantName):
-        createSessionResponse = asyncio.run(self.createSession(tenantName))
-        tokenId = createSessionResponse.json()["tokenId"]
-        orgId = createSessionResponse.json()["orgId"]
-        farmId = createSessionResponse.json()["context"]["farmId"]
-        sessionId = createSessionResponse.json()["sessionId"]
-      # host = createSessionResponse.json()["metadata"]["apiUrls"]["host"]
-      # port = createSessionResponse.json()["metadata"]["apiUrls"]["port"]
+        sessionResponse = asyncio.run(self.createSession(tenantName))
+        print(sessionResponse.json())
+        if (sessionResponse.status_code != 200):
+            print("Couldn't create session because tenant does not exist.")
+            return "Couldn't create session because tenant does not exist."
+        tokenId = sessionResponse.json()["tokenId"]
+        orgId = sessionResponse.json()["orgId"]
+        farmId = sessionResponse.json()["context"]["farmId"]
+        sessionId = sessionResponse.json()["sessionId"]
+      # host = sessionResponse.json()["metadata"]["apiUrls"]["host"]
+      # port = sessionResponse.json()["metadata"]["apiUrls"]["port"]
 
-        createConversationResponse = asyncio.run(self.createConversation(contact, tokenId, farmId, orgId))      
-        return createConversationResponse.json()
+        conversationResponse = asyncio.run(self.createConversation(contact, tokenId, farmId, orgId))      
+        return conversationResponse.json()
 
 
 

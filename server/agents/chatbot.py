@@ -117,7 +117,10 @@ def get_five9_agent(state: ChatState):
         }
     messaging_service = MessagingService()
     tenantName = state.get("tenant_name")
+    # Remember to check status code of response, if 500 then tenant name does not exist
     response = messaging_service.start(contact, tenantName)
+    if(response == "Couldn't create session because tenant does not exist."):
+        return {"messages": [{"role": "assistant", "content": response}], "gettingHuman": False, "approved": False}
     content = json.dumps(response) if isinstance(response, dict) else str(response)
     return {"messages": [{"role": "assistant", "content": content}], "user_info": content}
 
@@ -143,6 +146,8 @@ def classification_router(state: ChatState) -> str:
     
     if intent == "small_talk":
         return "general_chat"
+    
+    # Handle prompt injection attempts
     
     
 def five9_agent_router(state: ChatState) -> str:

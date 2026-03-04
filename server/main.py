@@ -5,6 +5,9 @@ from pathlib import Path
 import asyncio
 import sys
 import uuid
+from email_validator import validate_email, EmailNotValidError
+import phonenumbers
+from phonenumbers import NumberParseException
 
 # import uvicorn
 
@@ -58,10 +61,38 @@ async def websocket_endpoint(websocket: WebSocket):
                 first_name = await websocket.receive_text()
                 await websocket.send_text(result.get("response")[1])
                 last_name = await websocket.receive_text()
+
+                
                 await websocket.send_text(result.get("response")[2])
-                email = await websocket.receive_text()
+                # Checks for valid email format, if not then user must try again
+                while True:
+                    email = await websocket.receive_text()
+                    try: 
+                        validate_email(email)
+                        break
+                    except EmailNotValidError:
+                        print("Invalid email format")
+                        await websocket.send_text("Invalid email format. Please try again.")
+                        
                 await websocket.send_text(result.get("response")[3])
-                phone_number = await websocket.receive_text()
+                
+                # Validate phone number, if invalid then user must try again
+                while True:
+                    phone_number = await websocket.receive_text()
+                    try:
+                        parsed_number = phonenumbers.parse(phone_number, None)
+
+                        if phonenumbers.is_valid_number(parsed_number):
+                            print("Valid phone number.")
+                            break
+                        else:
+                            print("Invalid phone number.")
+                            await websocket.send_text("Invalid phone number format. Please try again. (include country code, e.g. +14155552671)")
+
+                    except NumberParseException:
+                        print("Could not parse phone number.")
+                        await websocket.send_text("Invalid phone number format. Please try again. (include country code, e.g. +14155552671)")
+               
 
                 contact = {"firstName": first_name,
                            "lastName": last_name,
@@ -77,6 +108,12 @@ async def websocket_endpoint(websocket: WebSocket):
                 
                 print("Contact: " + str(contact))
                 print(result)
+                if(not result.get("approved")):
+                    for message in reversed(result["messages"]):
+                        if message.get("role") == "assistant":
+                            ai_text = message.get("content", "")
+                            await websocket.send_text(str(ai_text))
+                            break  
                 
             else:
             # Prefer explicit response; else last assistant message
