@@ -2,8 +2,8 @@ import json
 import ast
 from typing import Dict, Optional, Any
 
+# Parse contact from JSON or Python literal (e.g. single-quoted dict).
 def _parse_contact(content: str) -> Optional[Dict[str, Any]]:
-    """Parse contact from JSON or Python literal (e.g. single-quoted dict)."""
     if not content or not content.strip():
         return None
     content = content.strip()

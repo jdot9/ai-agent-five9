@@ -9,6 +9,7 @@ from server.utils import parse
 import operator
 import logging
 import json
+from langgraph.types import interrupt
 
 logging.basicConfig(
     level=logging.INFO,
@@ -30,6 +31,8 @@ LLMs = [
 
 model = LLMs[0]
 
+messaging_service = MessagingService()
+
 system_prompts = {
     "classification": SystemMessage(content=(
         "'get_human': 'User wants to speak to a human.' "
@@ -40,7 +43,7 @@ system_prompts = {
     )),
 
     "general_chat": SystemMessage(content=(
-        "You are an AI assistant named Batman. Your personality is calm, cool and collected."
+        "You are an AI assistant named Kakashi. Your personality is calm, cool and collected."
         "When you introduce yourself, keep it concise but friendly."
         "Share what you know about your creator ONLY when a user asks for your creator."
         "Your creator is Jason Dotson, a software engineer from Memphis, Tennessee."
@@ -61,6 +64,18 @@ class ChatState(TypedDict):
     tenant_name: Optional[str]
     gettingHuman: Optional[bool]
 
+# Convert state message dictionaries to LangChain message objects.
+def _messages_from_state(state: ChatState) -> List:
+    logger.info("Converting state message dictionaries to LangChain message objects...")
+    out = []
+    for message in state["messages"]:
+        role, content = message.get("role", "user"), message.get("content", "")
+        if role == "user":
+            out.append(HumanMessage(content=content))
+        elif role == "assistant":
+            out.append(AIMessage(content=content))
+    return out
+
 def classify_intent(state: ChatState):
     logger.info("Asking LLM for intent label...")
     last_message = state["messages"][-1]["content"]
@@ -77,61 +92,7 @@ def classify_intent(state: ChatState):
         return {"intent": intent, "tenant_name": tname}
     return {"intent": intent}
 
-# Convert state message dictionaries to LangChain message objects.
-def _messages_from_state(state: ChatState) -> List:
-    logger.info("Converting state message dictionaries to LangChain message objects...")
-    out = []
-    for message in state["messages"]:
-        role, content = message.get("role", "user"), message.get("content", "")
-        if role == "user":
-            out.append(HumanMessage(content=content))
-        elif role == "assistant":
-            out.append(AIMessage(content=content))
-    return out
-
-def general_chat(state: ChatState):
-    logger.info("General Chat Node")
-    langchain_messages = _messages_from_state(state)
-    response = model.invoke([system_prompts["general_chat"]] + langchain_messages)
-    ai_content = response.content if hasattr(response, "content") else str(response)
-    # Return only the new message; reducer appends it to state (no overwrite)
-    return {"messages": [{"role": "assistant", "content": ai_content}], "response": ai_content}
-
-def get_user_info(state: ChatState):
-    print("Getting user info...")
-    ai_content = ["First name", 
-                  "Last name",
-                  "Email",
-                  "Phone number"]
-    return {"messages": [{"role": "assistant", "content": ai_content}], "response": ai_content, "gettingHuman": True}
-
-def get_five9_agent(state: ChatState):
-    logger.info("Getting Human...")
-    contact_str = state["messages"][-1]["content"]
-    contact = parse._parse_contact(contact_str)
-    if not contact:
-        logger.warning("Could not parse contact from message: %s", contact_str[:200])
-        return {
-            "messages": [{"role": "assistant", "content": "Please send your contact as valid JSON, e.g. {\"firstName\": \"...\", \"lastName\": \"...\", \"email\": \"...\", \"phoneNumber\": \"...\"}"}],
-            "response": "Please send your contact as valid JSON.",
-        }
-    messaging_service = MessagingService()
-    tenantName = state.get("tenant_name")
-    # Remember to check status code of response, if 500 then tenant name does not exist
-    response = messaging_service.start(contact, tenantName)
-    if(response == "Couldn't create session because tenant does not exist."):
-        return {"messages": [{"role": "assistant", "content": response}], "gettingHuman": False, "approved": False}
-    content = json.dumps(response) if isinstance(response, dict) else str(response)
-    return {"messages": [{"role": "assistant", "content": content}], "user_info": content}
-
-
-def fallback_response(state: ChatState):
-    return
-
-def summarize_conversation(state: ChatState):
-    return
-
-# Define routers
+# Routes classification
 def classification_router(state: ChatState) -> str:
   
     logger.info("Routing intent to appropriate node...")
@@ -148,26 +109,79 @@ def classification_router(state: ChatState) -> str:
         return "general_chat"
     
     # Handle prompt injection attempts
+
+def general_chat(state: ChatState):
+    logger.info("General Chat Node")
+    langchain_messages = _messages_from_state(state)
+    response = model.invoke([system_prompts["general_chat"]] + langchain_messages)
+    ai_content = response.content if hasattr(response, "content") else str(response)
+    # Return only the new message; reducer appends it to state (no overwrite)
+    return {"messages": [{"role": "assistant", "content": ai_content}], "response": ai_content}
+
+def get_user_info(state: ChatState):
+    print("Getting user info...")
+    ai_content = ["First name", 
+                  "Last name",
+                  "Email",
+                  "Phone number"]
     
+    return {"messages": [{"role": "assistant", "content": ai_content}], 
+            "response": ai_content, 
+            "gettingHuman": True,}
+
+def get_five9_agent(state: ChatState):
+    logger.info("Getting Human...")
+    contact_str = state["messages"][-1]["content"]
+    contact = parse._parse_contact(contact_str)
+    tenantName = state.get("tenant_name")
+    response = messaging_service.start(contact, tenantName)
+    if(response == "Couldn't create session because tenant does not exist."):
+        return {"messages": [{"role": "assistant", 
+                              "content": response}], 
+                "gettingHuman": False, 
+                "approved": False}
+    content = json.dumps(response) if isinstance(response, dict) else str(response)
+    content2 = "Request for human agent delivered. Waiting for approval..."
+
+    return {"messages": [{"role": "assistant", 
+                          "content": content2}], 
+            "user_info": content, 
+            "gettingHuman": False}
     
-def five9_agent_router(state: ChatState) -> str:
+
+def five9_agent_response(state: ChatState):
+    # Pause and ask for approval; resume with Command(resume=True) to set approved=True
+    approved = interrupt("Do you approve this conversation request?")
+    return {"approved": approved}
+
+def five9_agent_response_router(state: ChatState) -> str:
     approved = state.get("approved")
-
-    if approved:
-        return "summarize_conversation"
-
+    if(approved):
+#        approved = interrupt("Terminate Session.")
+        return "end_human_session"
     return "fallback_response"
+
+def end_human_session(state: ChatState):
+    continue_session = interrupt("Continue Session?")
+    return {"approved": continue_session}
+    
+
+def fallback_response(state: ChatState):
+    content = "Request for human interaction declined."
+    return {"messages": [{"role": "assistant",
+                          "content": content}]}
 
 # Define Graph
 graph = StateGraph(ChatState)
 
 # Define Nodes
 graph.add_node("classify_intent", classify_intent)
+graph.add_node("general_chat", general_chat)
 graph.add_node("get_user_info", get_user_info)
 graph.add_node("get_five9_agent", get_five9_agent)
-graph.add_node("general_chat", general_chat)
+graph.add_node("five9_agent_response", five9_agent_response)
+graph.add_node("end_human_session", end_human_session)
 graph.add_node("fallback_response", fallback_response)
-graph.add_node("summarize_conversation", summarize_conversation)
 
 graph.add_edge(START, "classify_intent")
 graph.add_conditional_edges(
@@ -181,18 +195,19 @@ graph.add_conditional_edges(
 )
 
 graph.add_conditional_edges(
-    "get_five9_agent",
-    five9_agent_router,
+    "five9_agent_response",
+    five9_agent_response_router,
     {
         "fallback_response": "fallback_response",
-        "summarize_conversation": "summarize_conversation"
+        "end_human_session": "end_human_session"
     }
 )
 
+graph.add_edge("general_chat", END)
 graph.add_edge("get_user_info", END)
 graph.add_edge("fallback_response", END)
-graph.add_edge("summarize_conversation", END)
-graph.add_edge("general_chat", END)
+graph.add_edge("end_human_session", END)
+graph.add_edge("get_five9_agent", "five9_agent_response")
 
 checkpointer = InMemorySaver()
 graph = graph.compile(checkpointer=checkpointer)
