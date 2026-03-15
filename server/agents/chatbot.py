@@ -21,7 +21,7 @@ logger = logging.getLogger(__name__)
 LLMs = [
     ChatAnthropic(
     model="claude-sonnet-4-5-20250929",
-    temperature=0
+    temperature=1
    ),
    ChatOpenAI(
        model="gpt-4o",
@@ -78,6 +78,8 @@ def _messages_from_state(state: ChatState) -> List:
 
 def classify_intent(state: ChatState):
     logger.info("Asking LLM for intent label...")
+    # IndexError: list index out of range
+#     During task with name 'classify_intent' and id 'd3c0ad43-4f62-ac36-027c-a65d66093b9f'
     last_message = state["messages"][-1]["content"]
 
     # 1️⃣ Ask LLM for label

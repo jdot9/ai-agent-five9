@@ -3,6 +3,7 @@ from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 from pathlib import Path
 import asyncio
+import json
 import sys
 import uuid
 from uuid import UUID
@@ -11,6 +12,7 @@ from server.utils.validatePhoneNumber import validatePhoneNumber
 from server.agents.chatbot import graph
 from server.services.ConnectionManager import ConnectionManager
 from langgraph.types import Command
+from server.services.MessagingService import MessagingService
 
 thread_id = str(uuid.uuid4())
 config = {"configurable": {"thread_id": thread_id}}
@@ -26,6 +28,7 @@ ui_path = project_root / "ui"
 app.mount("/static", StaticFiles(directory=ui_path), name="static")
 
 websocket_manager = ConnectionManager()
+message_service = MessagingService()
 event = asyncio.Event()
 
 # Serve your HTML page at root
@@ -46,6 +49,7 @@ async def create_endpoint(conversation_id: UUID):
 @app.put("/conversations/{conversation_id}/accept")
 async def accept_endpoint(conversation_id: UUID):
     print("Session accepted")
+    print(conversation_id)
     # Resume the interrupted graph so interrupt() returns True and state gets approved: True
     await asyncio.to_thread(
         graph.invoke,
@@ -78,7 +82,6 @@ async def message_endpoint(conversation_id: UUID, request: Request):
 async def websocket_endpoint(websocket: WebSocket):
     await websocket_manager.connect(websocket)
   
-    tenant_name = None
     try:
         while True:
             user_message = await websocket.receive_text()
@@ -88,7 +91,7 @@ async def websocket_endpoint(websocket: WebSocket):
             result = await asyncio.to_thread(
                 graph.invoke,
                 {"messages": [{"role": "user", "content": user_message}], 
-                 "tenant_name": tenant_name, 
+                 "tenant_name": None, 
                  "thread_id": thread_id},
                  config,
             )
@@ -143,8 +146,15 @@ async def websocket_endpoint(websocket: WebSocket):
                 while result.get("approved"):
                     user_message = await websocket.receive_text()
                     print("User: ", user_message)
+                   
                     snapshot = await asyncio.to_thread(graph.get_state, config)
                     result = snapshot.values if hasattr(snapshot, "values") else snapshot
+                    user_info_raw = result.get("user_info")
+                    user_info = json.loads(user_info_raw) if isinstance(user_info_raw, str) else (user_info_raw or {})
+                    farmId = user_info.get("farmId")
+                    tokenId = user_info.get("id")
+                    print(farmId, tokenId)
+                    await message_service.sendMessage(farmId, tokenId, user_message)
                     print("Approval status: " + str(result.get("approved")))
                    
 
