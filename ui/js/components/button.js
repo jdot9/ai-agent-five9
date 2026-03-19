@@ -14,8 +14,12 @@ class MyButton extends HTMLElement {
                     transition: background-color 0.3s ease;
                 }
 
-                :host([dropdown="true"]) button {
+                :host([dropdown="true"]) .btn {
                     padding: 3px;
+                    width: 100%;
+                    box-sizing: border-box;
+                    overflow: hidden;
+                    text-overflow: ellipsis;
                 }
 
                 :host([end-conversation="true"]) button {
