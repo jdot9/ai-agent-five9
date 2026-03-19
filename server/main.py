@@ -9,10 +9,18 @@ import uuid
 from uuid import UUID
 from server.utils.validateEmail import validateEmail
 from server.utils.validatePhoneNumber import validatePhoneNumber
-from server.agents.chatbot import graph
+from server.agents.chatbot import graph, set_current_model
 from server.services.ConnectionManager import ConnectionManager
 from langgraph.types import Command
 from server.services.MessagingService import MessagingService
+import logging 
+
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s - %(levelname)s - %(name)s - %(message)s"
+)
+
+logger = logging.getLogger(__name__)
 
 thread_id = str(uuid.uuid4())
 config = {"configurable": {"thread_id": thread_id}}
@@ -37,19 +45,24 @@ def read_index():
     return FileResponse(ui_path / "index.html")
 
 @app.put("/conversations/{conversation_id}/typing")
-async def typing_endpoint(conversation_id: UUID):
-    print("Five9 agent is typing")
-    return {"conversation_id": conversation_id}
+async def typing_endpoint(request: Request):
+    payload = await request.json()
+    display_name = payload.get("displayName")
+    logger.info(display_name + " is typing")
+    await websocket_manager.broadcast_typing(display_name=display_name, is_typing=True, is_human=True, connecting_to_human=False)
 
 @app.post("/conversations/{conversation_id}/create")
-async def create_endpoint(conversation_id: UUID):
-    print("Session created")
-    return {"conversation_id": conversation_id}
+async def create_conversation(conversation_id: UUID):
+    logger.info("Session created")
+    await websocket_manager.broadcast_connecting_to_human(connecting_to_human=True)
 
 @app.put("/conversations/{conversation_id}/accept")
-async def accept_endpoint(conversation_id: UUID):
-    print("Session accepted")
-    print(conversation_id)
+async def accept_conversation(conversation_id: UUID, request: Request):
+    logger.info("Session accepted")
+    logger.info(conversation_id)
+    payload = await request.json()
+    display_name = payload.get("displayName")
+    await websocket_manager.broadcast_name(display_name=display_name, is_human=True, connecting_to_human=False)
     # Resume the interrupted graph so interrupt() returns True and state gets approved: True
     await asyncio.to_thread(
         graph.invoke,
@@ -57,26 +70,45 @@ async def accept_endpoint(conversation_id: UUID):
         config,
     )
     event.set()
-    return {"conversation_id": conversation_id}
 
 @app.post("/conversations/{conversation_id}/terminate")
-async def terminate_endpoint(conversation_id: UUID):
-    print("Session terminated")
+async def terminate_conversation(conversation_id: UUID):
+    logger.info("Session terminated")
     await asyncio.to_thread(
         graph.invoke,
         Command(resume=False),
         config,
     )
-    return {"conversation_id": conversation_id}
+    await websocket_manager.broadcast_name(display_name="Kakashi", is_human=False, connecting_to_human=False)
+
+@app.get("/conversations/terminate")
+async def initiate_terminate_conversation():
+    await MessagingService().terminateConversation()
+    logger.info("initiating conversation termination")
+
 
 @app.post("/conversations/{conversation_id}/message")
 async def message_endpoint(conversation_id: UUID, request: Request):
     payload = await request.json()
     user = payload["displayName"]
     message = payload["text"]
-    print(user + ": " + message)
+    logger.info(user + ": " + message)
     await websocket_manager.broadcast(message)
     return {"conversation_id": conversation_id}
+
+# Sets LLM model (updates the model used in server/agents/chatbot.py)
+@app.post("/models/set")
+async def set_model(request: Request):
+    payload = await request.json()
+    raw = payload.get("model", 0)
+    index = int(raw) if raw is not None else 0
+    model = set_current_model(index)
+    try:
+        model_name = model.model_name
+    except:
+        model_name = model.model
+    logger.info(f"LLM model set to {model_name}")
+    return {"message": "LLM model changed to {model_name}"}
 
 @app.websocket("/ws")
 async def websocket_endpoint(websocket: WebSocket):
@@ -87,7 +119,6 @@ async def websocket_endpoint(websocket: WebSocket):
             user_message = await websocket.receive_text()
             print("User: ", user_message)
         
-            
             result = await asyncio.to_thread(
                 graph.invoke,
                 {"messages": [{"role": "user", "content": user_message}], 
@@ -98,7 +129,7 @@ async def websocket_endpoint(websocket: WebSocket):
 
             # Get info for Five9 Agent
             if(result.get("gettingHuman")):
-                print("Get user info...")
+                logger.info("Get user info...")
                 await websocket.send_text("Before I can connect you to a human, I need the following information from you: ")
 
                 # Get tenant name
@@ -133,14 +164,18 @@ async def websocket_endpoint(websocket: WebSocket):
                      "thread_id": thread_id},
                      config,
                 )
-                
+
+                # Send "Request for human agent delivered" message to user
+                messages = result.get("messages") or []
+                last_message = messages[-1]["content"] if messages else None
+                await websocket.send_text(str(last_message))
+
                 # Wait for Human Agent to approve or decline conversation request
                 await event.wait()
 
                 # Accept endpoint resumed the graph; get updated state (approved is now True)
                 snapshot = await asyncio.to_thread(graph.get_state, config)
                 result = snapshot.values if hasattr(snapshot, "values") else snapshot
-                print("Approval status: " + str(result.get("approved")))
 
                 # Conversation with Human Agent
                 while result.get("approved"):
@@ -153,12 +188,10 @@ async def websocket_endpoint(websocket: WebSocket):
                     user_info = json.loads(user_info_raw) if isinstance(user_info_raw, str) else (user_info_raw or {})
                     farmId = user_info.get("farmId")
                     tokenId = user_info.get("id")
-                    print(farmId, tokenId)
+                    if(not result.get("approved")):
+                        break
                     await message_service.sendMessage(farmId, tokenId, user_message)
-                    print("Approval status: " + str(result.get("approved")))
-                   
-
-        
+           
                 # Send result if failed to connect to a Five9 Human Agent
                 if(not result.get("approved")):
                     for message in reversed(result["messages"]):

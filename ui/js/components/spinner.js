@@ -11,6 +11,7 @@ class MySpinner extends HTMLElement {
                     border-top: 4px solid var(--primary-color); /* colored part */
                     border-radius: 50%;
                     animation: spin 1s linear infinite;
+                
                 }
 
                 @keyframes spin {

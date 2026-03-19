@@ -4,10 +4,14 @@ import logging
 import os
 
 class MessagingService:
+    farmId = None
+    tokenId = None
+
     def __init__(self):
         self.campaignName = "Inbound"
         self.baseUrl = os.environ.get("FIVE9_BASE_URL")
         self.callbackUrl = os.environ.get("CALLBACK_URL")
+
 
 
     def start(self, contact: dict[str, str], tenantName):
@@ -28,6 +32,8 @@ class MessagingService:
             
     async def createSession(self, tenantName):
         my_headers = {"Content-Type": "application/json"}
+        if(tenantName == "Hatake"):
+            tenantName = os.environ.get("FIVE9_TENANT_NAME")
         payload = {"tenantName": tenantName}
         endpoint = "/appsvcs/rs/svc/auth/anon?cookieless=true"
         async with httpx.AsyncClient() as client:
@@ -56,9 +62,13 @@ class MessagingService:
                 headers=my_headers,
                 json=payload
             )
+        # Need to get tokenId and farmId for conversation termination
+
         data = response.json()
         data.update({"farmId": farmId})
         print(data)
+        MessagingService.farmId = data["farmId"]
+        MessagingService.tokenId = data["id"]
         return data
     
 
@@ -77,7 +87,18 @@ class MessagingService:
                 json=payload
             )
 
+    async def terminateConversation(self):
+        my_headers = {"farmId": MessagingService.farmId,
+                      "Authorization": "Bearer " + MessagingService.tokenId}
 
+        endpoint = f"/appsvcs/rs/svc/conversations/{MessagingService.tokenId}/terminate"
+
+        async with httpx.AsyncClient() as client:
+           await client.post(
+                self.baseUrl + endpoint,
+                headers=my_headers
+            )
+           print(f"Conversation {MessagingService.tokenId} terminated")
 
 
 

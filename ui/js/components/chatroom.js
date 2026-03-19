@@ -11,6 +11,7 @@
 
 import { createTimestamp } from "../utils/createTimestamp.js";
 import { createMessage } from "../utils/createMessage.js";
+import { initiateTerminateConversation } from "../services/TerminationService.js";
 class MyChatRoom extends HTMLElement {
 
          constructor() {
@@ -88,6 +89,10 @@ class MyChatRoom extends HTMLElement {
                 }
 
                 .chatroom-body__system-message {
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    gap: 8px;
                     color: white;
                     font-weight: 900;
                     padding: 3px;
@@ -120,11 +125,25 @@ class MyChatRoom extends HTMLElement {
                     display: flex;
                     flex-direction: column;
                     align-items: flex-start;
-                    height: 271px;
+                    height: 271px; 
                     overflow-y: auto;
                     overflow-x: hidden;
                     width: 100%;
                     box-sizing: border-box;
+                }
+
+                .chatroom-body__typing {
+                    margin-top: auto;
+                    align-self: flex-start;
+                    flex-shrink: 0;
+                    padding: 6px 10px;
+                    font-size: 0.85rem;
+                    color: #666;
+                    font-style: italic;
+                }
+
+                .chatroom-body__typing.hidden {
+                    display: none;
                 }
 
                 img {
@@ -153,25 +172,24 @@ class MyChatRoom extends HTMLElement {
 
             <div class="chatroom hidden">
                 <div class="chatroom-header">
-                    <p class="chatroom-header__title"> AI Agent </p>
-                    <p class="chatroom-header__llm"> LLM: </p>
-                    <my-button end-conversation="true" onClick="alert('Disconnected')">End Conversation</my-button>
-                    <my-dropdown></my-dropdown>
+                    <p class="chatroom-header__title" id="humanOrAi"> AI Agent </p>
+                    <p class="chatroom-header__llm" id="llm"> LLM: </p>
+                    <my-button end-conversation="true" onClick="initiateTerminateConversation()" id="terminate-conversation-btn">End Conversation</my-button>
+                    <my-dropdown id="llm-dropdown"></my-dropdown>
                     <p id="clear-convo" class="chatroom-header__clear" title="Clear Conversation"> 🗑️ </p>
                     <p id="hideChatBtn" class="chatroom-header__exit"> X </p>
                 </div>
 
                 <div class="chatroom-body">
                 
-                    <div class="chatroom-body__system-message">
-                        Connecting with human... 
+                    <div class="chatroom-body__system-message" id="systemMessage">
+                        <my-spinner class="hidden" id="spinner"></my-spinner>
+                        <span id="systemMessageText">Kakashi</span>
                     </div>
 
                     <div class="chatroom-body__conversation">
-                            
-                     
+                        <p class="chatroom-body__typing hidden" id="typingIndicator" aria-live="polite"></p>
                     </div>
-                   
                 </div>
 
                 <form id="formId" class="chatroom-form">
@@ -192,27 +210,90 @@ class MyChatRoom extends HTMLElement {
         setupEvents() {
 
             const shadow = this.shadowRoot;
-            // const ws = new WebSocket("wss://CALLBACK-URL/ws");
-            const ws = new WebSocket("ws://127.0.0.1:8000/ws");
+            // Connect to the backend WebSocket on the same host the UI was loaded from.
+            // This avoids hard-coding ngrok URLs.
+            const scheme = window.location.protocol === "https:" ? "wss://" : "ws://";
+            const ws = new WebSocket(scheme + window.location.host + "/ws");
             const messageContainer = shadow.querySelector(".chatroom-body__conversation");
+            const typingIndicator = shadow.getElementById("typingIndicator");
             const clearBtnId = shadow.getElementById("clear-convo");
             const inputId = shadow.getElementById("messageInput");
             const formId = shadow.getElementById("formId");
             const showChatBtnId = shadow.getElementById("showChatBtn");
             const hideChatBtnId = shadow.getElementById("hideChatBtn");
+            const systemMessageId = shadow.getElementById("systemMessage");
+            const systemMessageTextId = shadow.getElementById("systemMessageText");
+            const humanOrAiId = shadow.getElementById("humanOrAi");
+            const llmId = shadow.getElementById("llm");
+            const llmDropdownId = shadow.getElementById("llm-dropdown");
+            const spinnerId = shadow.getElementById("spinner");
             const chatroomClass = shadow.querySelector(".chatroom");
-            
+            const terminateConversationBtnId = shadow.getElementById("terminate-conversation-btn");
             // Log websocket connection
             ws.onopen = () => {
                 console.log("Connected to WebSocket");
             };
 
-            // Receive message from backend
+            // Receive message from backend: either plain-text chat or JSON (typing indicator / control payload).
+            // Only call JSON.parse when payload looks like JSON to avoid SyntaxError on plain text (e.g. "Request for...").
             ws.onmessage = (event) => {
-                const serverMessage = createMessage(event.data, "received");
-                messageContainer.appendChild(serverMessage);
+                const raw = typeof event.data === "string" ? event.data : String(event.data);
+                const looksLikeJson = raw.trim().startsWith("{");
+                if (looksLikeJson) {
+                    try {
+                        const data = JSON.parse(raw);
+                        const isHuman = data.isHuman;
+                        const name = data.displayName || "Five9 Agent";
+                        const connectingToHuman = data.connectingToHuman;
+
+                        // Update system message and header from control payload (connecting / human vs AI).
+                        if (connectingToHuman) {    
+                            systemMessageTextId.textContent = "Awaiting human approval...";
+                            spinnerId.classList.remove("hidden")
+                            return;
+                        }
+
+                        if (isHuman) {
+                            //if (systemMessageTextId) 
+                            systemMessageTextId.textContent = name;
+                            humanOrAiId.textContent = "Human Agent";
+                            llmDropdownId.classList.add("hidden");
+                            llmId.classList.add("hidden");
+                            spinnerId.classList.add("hidden")
+                        } else {
+                           // if (systemMessageTextId) 
+                            systemMessageTextId.textContent = "Kakashi";
+                            humanOrAiId.textContent = "Ai Agent";
+                            llmDropdownId.classList.remove("hidden");
+                            llmId.classList.remove("hidden");
+                        }
+
+                        // broadcast_typing payload: show/hide typing indicator (p#typingIndicator) only; no chat bubble.
+                        if (data.type === "typing" && typingIndicator) {
+                            if (data.is_typing) {
+                                typingIndicator.textContent = `${name} is typing...`;
+                                typingIndicator.classList.remove("hidden");
+                            } else {
+                                typingIndicator.classList.add("hidden");
+                                typingIndicator.textContent = "";
+                            }
+                            return;
+                        }
+                        // Other JSON (control only): do not render as a message.
+                        return;
+                    } catch (_) {
+                        // Malformed JSON: fall through and show raw string as a chat message.
+                    }
+                }
+                // Plain text or non-JSON: display as a received chat message above the typing indicator.
+                const serverMessage = createMessage(raw, "received");
                 serverMessage.appendChild(createTimestamp());
+                messageContainer.insertBefore(serverMessage, typingIndicator);
                 serverMessage.scrollIntoView({ behavior: "smooth" });
+                if (typingIndicator) {
+                    typingIndicator.classList.add("hidden");
+                    typingIndicator.textContent = "";
+                }
             }
 
             // Send message to backend
@@ -223,9 +304,9 @@ class MyChatRoom extends HTMLElement {
                 if (!message) return;
 
                 inputId.value = ""; // clear input
-                const userMsgBubble = createMessage(message, "sent")
-                messageContainer.appendChild(userMsgBubble);
+                const userMsgBubble = createMessage(message, "sent");
                 userMsgBubble.appendChild(createTimestamp());
+                messageContainer.insertBefore(userMsgBubble, typingIndicator);
 
                 userMsgBubble.scrollIntoView({ behavior: "smooth" });
                 ws.send(message);
@@ -235,6 +316,8 @@ class MyChatRoom extends HTMLElement {
             // Clear conversation history
             clearBtnId.addEventListener("click", () => {
                 messageContainer.replaceChildren();
+                typingIndicator.classList.add("hidden");
+                typingIndicator.textContent = "";
             });
 
             // Show/hide chatroom  
@@ -245,7 +328,10 @@ class MyChatRoom extends HTMLElement {
             hideChatBtnId.addEventListener("click", () => {
                 chatroomClass.classList.toggle("hidden");
             });
-            
+
+            terminateConversationBtnId.addEventListener("click", () => {
+                initiateTerminateConversation();
+            });
         }
 }
 
